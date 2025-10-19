@@ -1,0 +1,133 @@
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h1 class="card-title"><%= @post.title %></h1>
+        <p class="text-muted">
+          By <%= @post.user.username %> on <%= @post.created_at.strftime("%B %d, %Y") %>
+        </p>
+        
+        <% if @post.tags.any? %>
+          <div class="mb-3">
+            <% @post.tags.each do |tag| %>
+              <span class="badge bg-secondary"><%= tag.name %></span>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="post-content mb-4">
+          <%= @post.content %>
+        </div>
+
+        <div class="post-actions d-flex justify-content-between align-items-center">
+          <div class="social-share">
+            <button class="btn btn-sm btn-outline-primary me-2" onclick="shareOnTwitter()">
+              <i class="fab fa-twitter"></i> Twitter
+            </button>
+            <button class="btn btn-sm btn-outline-primary me-2" onclick="shareOnFacebook()">
+              <i class="fab fa-facebook"></i> Facebook
+            </button>
+            <button class="btn btn-sm btn-outline-primary" onclick="shareOnLinkedIn()">
+              <i class="fab fa-linkedin"></i> LinkedIn
+            </button>
+          </div>
+          
+          <div class="action-buttons">
+            <% if logged_in? %>
+              <form action="/posts/<%= @post.id %>/bookmark" method="POST" class="d-inline me-2">
+                <button type="submit" class="btn btn-sm <%= current_user.bookmarks.exists?(post: @post) ? 'btn-warning' : 'btn-outline-warning' %>">
+                  <i class="fas fa-bookmark"></i> <%= current_user.bookmarks.exists?(post: @post) ? 'Bookmarked' : 'Bookmark' %>
+                </button>
+              </form>
+            <% end %>
+
+            <% if logged_in? && @post.user == current_user %>
+              <div class="btn-group">
+                <a href="/posts/<%= @post.id %>/edit" class="btn btn-sm btn-warning">
+                  <i class="fas fa-edit"></i> Edit
+                </a>
+                <form action="/posts/<%= @post.id %>" method="POST" style="display: inline;">
+                  <input type="hidden" name="_method" value="DELETE">
+                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                    <i class="fas fa-trash"></i> Delete
+                  </button>
+                </form>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Comments</h3>
+      </div>
+      <div class="card-body">
+        <% if logged_in? %>
+          <form action="/posts/<%= @post.id %>/comments" method="POST" class="mb-4">
+            <div class="mb-3">
+              <textarea class="form-control" name="content" rows="3" placeholder="Write a comment..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Post Comment</button>
+          </form>
+        <% end %>
+
+        <div class="comments-list">
+          <% @post.comments.includes(:user).order(created_at: :desc).each do |comment| %>
+            <div class="comment mb-3">
+              <div class="d-flex">
+                <div class="flex-shrink-0">
+                  <img src="<%= comment.user.avatar_url || '/images/default-avatar.png' %>" 
+                       class="rounded-circle" width="40" height="40" alt="Avatar">
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <div class="comment-header">
+                    <strong><%= comment.user.username %></strong>
+                    <small class="text-muted">
+                      <%= comment.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+                    </small>
+                  </div>
+                  <div class="comment-content">
+                    <%= comment.content %>
+                  </div>
+                  <div class="comment-actions mt-2">
+                    <% if logged_in? && (comment.user == current_user || @post.user == current_user) %>
+                      <form action="/comments/<%= comment.id %>" method="POST" class="d-inline">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" class="btn btn-sm btn-link text-danger" 
+                                onclick="return confirm('Delete this comment?')">
+                          <i class="fas fa-trash"></i> Delete
+                        </button>
+                      </form>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function shareOnTwitter() {
+  const title = '<%= @post.title %>';
+  const url = window.location.href;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`);
+}
+
+function shareOnFacebook() {
+  const url = window.location.href;
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+}
+
+function shareOnLinkedIn() {
+  const title = '<%= @post.title %>';
+  const url = window.location.href;
+  window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`);
+}
+</script>
