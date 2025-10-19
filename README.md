@@ -1,4 +1,4 @@
-# FitnessBlog - Your Health Journey Platform 🏃‍♂️💪
+# BlogSport - Your Health Journey Platform 🏃‍♂️💪
 
 A dynamic fitness blogging platform built with Sinatra, helping fitness enthusiasts share their knowledge and experiences.
 
